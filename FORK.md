@@ -27,9 +27,10 @@ The delta between `lime` and `main` should only ever be:
 1. Branch off `main` (so the patch applies cleanly upstream):
    `git checkout -b my-fix origin/main`
 2. Open a PR against `jgroth/kompendium`.
-3. Also merge it into `lime` (open a PR against `lime` in this repo, or merge
-   and push directly). This publishes it under `@limetech/kompendium` without
-   waiting for upstream.
+3. Also open a PR against `lime` in this repo. This publishes it under
+   `@limetech/kompendium` without waiting for upstream. (`lime` and `main`
+   are protected by rulesets: maintainers merge PRs — only the sync
+   automation and org admins can push to the branches directly.)
 4. When upstream accepts the PR, nothing needs to be done here: the daily
    sync merges upstream `main` into `lime`, and since the identical change is
    already on both sides, it merges as a no-op. The delta shrinks by itself.
@@ -43,7 +44,9 @@ fork's current delta.
   `main`, mirrors upstream tags, merges `main` into `lime`, and triggers a
   release if `lime` changed. On a merge conflict it opens an issue and fails;
   resolve locally (usually by keeping upstream's version of a patch upstream
-  has modified-and-accepted) and push `lime`.
+  has modified-and-accepted) and push `lime`. Pushing the resolved merge
+  commit requires ruleset bypass privileges (org admins) — a merge commit
+  cannot be landed through a rebase-merged PR.
 - **`release-lime.yml`** (push to `lime` + called by the sync): runs
   semantic-release.
 
