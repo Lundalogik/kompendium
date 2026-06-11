@@ -8,14 +8,15 @@
 # `lime-v*` tags (see .releaserc.json), so upstream's `v*` tags are ignored.
 #
 # npm auth uses OIDC trusted publishing (id-token: write) — no NPM_TOKEN.
+# The release tag is pushed over SSH with the DEPLOY_KEY secret (a write
+# deploy key; .releaserc.json points repositoryUrl at the SSH remote):
+# the tag ruleset only exempts deploy keys and org admins, and GITHUB_TOKEN
+# cannot be granted ruleset bypass at all.
 name: Release @limetech/kompendium
 on:
   push:
     branches:
       - lime
-  # Allows sync-upstream.yml to trigger a release after merging upstream,
-  # since pushes made with GITHUB_TOKEN do not trigger `push` workflows.
-  workflow_call:
   workflow_dispatch:
 
 permissions:
@@ -31,9 +32,11 @@ jobs:
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
-          # When called from sync-upstream.yml the triggering event's SHA is
-          # the pre-merge lime head, so check out the branch tip explicitly.
+          # When triggered via workflow_dispatch the event SHA can be stale,
+          # so check out the branch tip explicitly.
           ref: lime
+          # Tag pushes must use the deploy key (see header comment).
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
           # Deliberately a shallow clone: semantic-release runs
           # `git fetch --unshallow` itself, which also fetches the
           # release-channel git notes. With fetch-depth: 0 that fetch fails
@@ -53,4 +56,6 @@ jobs:
         with:
           semantic_version: 25.0.2
         env:
+          # Used by @semantic-release/github for API calls (creating the
+          # GitHub release); git pushes go over SSH via the deploy key.
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

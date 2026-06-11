@@ -48,8 +48,12 @@ fork's current delta.
   has modified-and-accepted) and push `lime`. Pushing the resolved merge
   commit requires ruleset bypass privileges (org admins) — a merge commit
   cannot be landed through a rebase-merged PR.
-- **`release-lime.yml`** (push to `lime` + called by the sync): runs
-  semantic-release.
+- **`release-lime.yml`** (push to `lime`): runs semantic-release.
+- All automation pushes (the mirror, sync merges, release tags) authenticate
+  with a write **deploy key** (the `DEPLOY_KEY` secret) rather than
+  `GITHUB_TOKEN`: the rulesets only exempt deploy keys and org admins, and
+  GitHub does not allow `GITHUB_TOKEN` (the github-actions app) as a ruleset
+  bypass actor at all.
 
 `lime` must remain the repository's **default branch** — scheduled workflows
 only run from the default branch, and `main` must stay a pure mirror.

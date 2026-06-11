@@ -1,5 +1,6 @@
 {
   "branches": ["lime"],
+  "repositoryUrl": "git@github.com:Lundalogik/kompendium.git",
   "tagFormat": "lime-v${version}",
   "plugins": [
     "@semantic-release/commit-analyzer",

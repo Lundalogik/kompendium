@@ -5,9 +5,12 @@
 #   2. Merges `main` into `lime` (the integration branch this fork releases
 #      from). Patches that upstream has accepted merge as no-ops, so the
 #      fork's delta shrinks automatically as upstream catches up.
-#   3. If `lime` changed, runs the release workflow (a plain `git push` from
-#      this job would not trigger it, because pushes made with GITHUB_TOKEN
-#      do not trigger `push` workflows).
+#
+# All pushes authenticate with the DEPLOY_KEY secret (a write deploy key on
+# this repo): the branch/tag rulesets only exempt deploy keys and org admins,
+# and GITHUB_TOKEN cannot be granted ruleset bypass at all. A side benefit
+# over GITHUB_TOKEN pushes: the push to `lime` triggers the release workflow
+# directly, so no workflow-call chaining is needed here.
 #
 # On a merge conflict the job aborts the merge, opens an issue, and fails —
 # a human resolves the conflict locally and pushes `lime`.
@@ -25,15 +28,15 @@ jobs:
     name: Mirror main and merge into lime
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       issues: write
-    outputs:
-      lime_updated: ${{ steps.merge.outputs.updated }}
     steps:
       - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           ref: lime
           fetch-depth: 0
+          # Pushes must use the deploy key (see header comment).
+          ssh-key: ${{ secrets.DEPLOY_KEY }}
       - name: Configure git
         run: |
           git config user.name "github-actions[bot]"
@@ -58,9 +61,6 @@ jobs:
           fi
           if [ "$(git rev-parse HEAD)" != "$before" ]; then
             git push origin lime
-            echo "updated=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "updated=false" >> "$GITHUB_OUTPUT"
           fi
       - name: Open conflict issue
         if: failure() && steps.merge.outputs.conflict == 'true'
@@ -92,14 +92,3 @@ jobs:
               --body "${ISSUE_BODY}
           Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
           fi
-
-  release:
-    name: Release after sync
-    needs: sync
-    if: needs.sync.outputs.lime_updated == 'true'
-    permissions:
-      contents: write
-      issues: write
-      pull-requests: write
-      id-token: write
-    uses: ./.github/workflows/release-lime.yml
