@@ -1,5 +1,5 @@
 {
-  "name": "kompendium",
+  "name": "@limetech/kompendium",
   "version": "1.1.1",
   "description": "Documentation generator for Stencil components",
   "keywords": [
@@ -9,9 +9,9 @@
     "kompendium",
     "typescript"
   ],
-  "homepage": "https://github.com/jgroth/kompendium",
+  "homepage": "https://github.com/Lundalogik/kompendium",
   "bugs": {
-    "url": "https://github.com/jgroth/kompendium/issues"
+    "url": "https://github.com/Lundalogik/kompendium/issues"
   },
   "license": "MIT",
   "author": {
@@ -36,6 +36,9 @@
     "dist/",
     "loader/"
   ],
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "stencil build --docs",
     "postbuild": "copyfiles -f src/kompendium/*.ts dist",
@@ -108,6 +111,6 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/jgroth/kompendium.git"
+    "url": "git+https://github.com/Lundalogik/kompendium.git"
   }
 }
