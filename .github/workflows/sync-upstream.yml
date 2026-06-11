@@ -1,0 +1,101 @@
+# Keeps this fork in sync with upstream (jgroth/kompendium):
+#
+#   1. Fast-forwards `main` to upstream `main` (pure mirror — never commit to
+#      `main` directly) and mirrors upstream tags.
+#   2. Merges `main` into `lime` (the integration branch this fork releases
+#      from). Patches that upstream has accepted merge as no-ops, so the
+#      fork's delta shrinks automatically as upstream catches up.
+#   3. If `lime` changed, runs the release workflow (a plain `git push` from
+#      this job would not trigger it, because pushes made with GITHUB_TOKEN
+#      do not trigger `push` workflows).
+#
+# On a merge conflict the job aborts the merge, opens an issue, and fails —
+# a human resolves the conflict locally and pushes `lime`.
+#
+# This file lives on `lime`, which must remain the repository's default
+# branch for the schedule to fire.
+name: Sync upstream
+on:
+  schedule:
+    - cron: '17 5 * * *'
+  workflow_dispatch:
+
+jobs:
+  sync:
+    name: Mirror main and merge into lime
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      issues: write
+    outputs:
+      lime_updated: ${{ steps.merge.outputs.updated }}
+    steps:
+      - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
+        with:
+          ref: lime
+          fetch-depth: 0
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Fetch upstream
+        run: |
+          git remote add upstream https://github.com/jgroth/kompendium.git
+          git fetch upstream main --tags
+      - name: Mirror upstream main and tags
+        run: |
+          git push origin refs/remotes/upstream/main:refs/heads/main
+          git push origin --tags
+      - name: Merge main into lime
+        id: merge
+        run: |
+          before=$(git rev-parse HEAD)
+          if ! git merge --no-edit upstream/main; then
+            git merge --abort
+            echo "conflict=true" >> "$GITHUB_OUTPUT"
+            echo "::error::Merge conflict syncing upstream/main into lime"
+            exit 1
+          fi
+          if [ "$(git rev-parse HEAD)" != "$before" ]; then
+            git push origin lime
+            echo "updated=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "updated=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Open conflict issue
+        if: failure() && steps.merge.outputs.conflict == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ISSUE_BODY: |
+            The scheduled upstream sync hit a merge conflict.
+
+            Resolve it locally:
+
+            ```sh
+            git fetch upstream main
+            git checkout lime
+            git merge upstream/main
+            # resolve conflicts (usually: keep upstream's version of patches it has accepted)
+            git push origin lime
+            ```
+        run: |
+          existing=$(gh issue list --repo "$GITHUB_REPOSITORY" \
+            --state open --search 'in:title "Upstream sync conflict"' \
+            --json number --jq 'length')
+          if [ "$existing" = "0" ]; then
+            gh issue create --repo "$GITHUB_REPOSITORY" \
+              --title "Upstream sync conflict: manual merge of upstream/main into lime needed" \
+              --body "${ISSUE_BODY}
+          Run: ${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/actions/runs/${GITHUB_RUN_ID}"
+          fi
+
+  release:
+    name: Release after sync
+    needs: sync
+    if: needs.sync.outputs.lime_updated == 'true'
+    permissions:
+      contents: write
+      issues: write
+      pull-requests: write
+      id-token: write
+    uses: ./.github/workflows/release-lime.yml
