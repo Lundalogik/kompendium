@@ -3,6 +3,12 @@
 # Kompendium
 ![CI](https://github.com/jgroth/kompendium/workflows/CI/badge.svg?branch=main) [![Version](https://img.shields.io/npm/v/kompendium.svg)](https://www.npmjs.com/package/kompendium) [![semantic-release](https://img.shields.io/badge/%20%20%F0%9F%93%A6%F0%9F%9A%80-semantic--release-e10079.svg)](https://github.com/semantic-release/semantic-release)
 
+> **Note:** This is [Lundalogik's maintained fork](https://github.com/Lundalogik/kompendium)
+> of [jgroth/kompendium](https://github.com/jgroth/kompendium), published on npm as
+> [`@limetech/kompendium`](https://www.npmjs.com/package/@limetech/kompendium).
+> Changes made here are also offered upstream as pull requests, and upstream
+> is merged back continuously. See [FORK.md](./FORK.md) for how the fork works.
+
 # Introduction  
 Kompendium is a simple, fast and elegant tool for generating documentation for components made with Stencil.   
 
