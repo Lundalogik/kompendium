@@ -27,10 +27,11 @@ The delta between `lime` and `main` should only ever be:
 1. Branch off `main` (so the patch applies cleanly upstream):
    `git checkout -b my-fix origin/main`
 2. Open a PR against `jgroth/kompendium`.
-3. Also open a PR against `lime` in this repo. This publishes it under
-   `@limetech/kompendium` without waiting for upstream. (`lime` and `main`
-   are protected by rulesets: maintainers merge PRs — only the sync
-   automation and org admins can push to the branches directly.)
+3. Also open a PR against `lime` in this repo. When that PR is merged, the
+   change is automatically released as `@limetech/kompendium` — no waiting
+   for upstream. (`lime` and `main` are protected by rulesets: maintainers
+   merge PRs — only the sync automation and org admins can push to the
+   branches directly.)
 4. When upstream accepts the PR, nothing needs to be done here: the daily
    sync merges upstream `main` into `lime`, and since the identical change is
    already on both sides, it merges as a no-op. The delta shrinks by itself.
