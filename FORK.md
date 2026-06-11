@@ -36,6 +36,15 @@ The delta between `lime` and `main` should only ever be:
    sync merges upstream `main` into `lime`, and since the identical change is
    already on both sides, it merges as a no-op. The delta shrinks by itself.
 
+> [!WARNING]
+> Never use the **Update branch** button on a PR against `lime`. Because the
+> branch is based on `main` while `lime` carries the fork's delta, every PR
+> against `lime` shows as "out-of-date with the base branch" — permanently,
+> and by design. Updating the branch would merge that delta (package rename,
+> fork workflows, this file, …) into the branch, polluting the paired
+> upstream PR. For the same reason, the `lime` ruleset deliberately does
+> **not** require branches to be up to date before merging.
+
 The list of open PRs against upstream **is** the canonical description of the
 fork's current delta.
 
