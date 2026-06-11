@@ -78,6 +78,10 @@ jobs:
             # resolve conflicts (usually: keep upstream's version of patches it has accepted)
             git push origin lime
             ```
+
+            Note: pushing the resolved merge to `lime` requires ruleset
+            bypass privileges (org admins) — a merge commit cannot be
+            landed through a rebase-merged PR.
         run: |
           existing=$(gh issue list --repo "$GITHUB_REPOSITORY" \
             --state open --search 'in:title "Upstream sync conflict"' \
