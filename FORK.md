@@ -83,6 +83,12 @@ publish the unscoped `kompendium` package on pushes to `main`.
   commits. Release notes live in this repo's GitHub releases.
 - The `version` field in `package.json` on `lime` is whatever upstream last
   released; the actual published version is computed by semantic-release.
+- Release success comments are disabled (`successCommentCondition: false`):
+  synced upstream commits are associated with *upstream* PRs, and
+  `@semantic-release/github` looks those PR numbers up in this repo, fails
+  with a 404 and turns the whole release run red (the npm publish itself
+  succeeds). Bug present as of v12.0.2 and master. Comment/label steps are
+  the only loss.
 - npm publishing uses [trusted publishing
   (OIDC)](https://docs.npmjs.com/trusted-publishers/) — there is no npm token
   secret.
