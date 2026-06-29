@@ -106,6 +106,10 @@
     "unist-util-visit": "^5.1.0",
     "yaml": "^2.9.0"
   },
+  "overrides": {
+    "js-yaml@^4": "^4.2.0",
+    "@babel/core": "^7.29.6"
+  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/Lundalogik/kompendium.git"
