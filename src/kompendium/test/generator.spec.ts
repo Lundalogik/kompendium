@@ -12,7 +12,10 @@ describe('kompendium()', () => {
     beforeEach(() => {
         tmpObject = tmp.dirSync({ unsafeCleanup: true });
         path = tmpObject.name;
-        kompendium = kompendiumGenerator({ path: path });
+        kompendium = kompendiumGenerator({
+            path: path,
+            publicPath: `${path}/public`,
+        });
         stencilConfig = {
             logger: {
                 createTimeSpan: () => ({
@@ -40,5 +43,79 @@ describe('kompendium()', () => {
         const data = JSON.parse(json);
         expect(typeof data).toEqual('object');
         expect(data.docs).toEqual({ foo: 'bar', components: [] });
+    });
+});
+
+describe('kompendiumGenerator() when the public folder has a kompendium.json from an earlier run', () => {
+    let tmpObject: any;
+    let path: string;
+    let publicPath: string;
+    let dataFile: string;
+    let oldFile: string;
+
+    const isStillThere = (file: string) => {
+        try {
+            fs.lstatSync(file);
+
+            return true;
+        } catch {
+            return false;
+        }
+    };
+
+    const createGenerator = () =>
+        kompendiumGenerator({ path: path, publicPath: publicPath });
+
+    beforeEach(() => {
+        tmpObject = tmp.dirSync({ unsafeCleanup: true });
+        path = `${tmpObject.name}/data`;
+        publicPath = `${tmpObject.name}/public`;
+        fs.mkdirSync(path);
+        fs.mkdirSync(publicPath);
+        dataFile = `${path}/kompendium.json`;
+        oldFile = `${publicPath}/kompendium.json`;
+    });
+
+    afterEach(() => {
+        tmpObject.removeCallback();
+    });
+
+    it('removes an old copy of the file as soon as the generator is created', () => {
+        fs.writeFileSync(oldFile, 'old');
+
+        createGenerator();
+
+        expect(isStillThere(oldFile)).toBe(false);
+    });
+
+    it('removes an old link, but not the file it points to', () => {
+        fs.writeFileSync(dataFile, 'data');
+        fs.symlinkSync(dataFile, oldFile);
+
+        createGenerator();
+
+        expect(isStillThere(oldFile)).toBe(false);
+        expect(fs.readFileSync(dataFile, 'utf8')).toBe('data');
+    });
+
+    it('removes an old link that points to nothing', () => {
+        fs.symlinkSync(`${path}/missing.json`, oldFile);
+
+        createGenerator();
+
+        expect(isStillThere(oldFile)).toBe(false);
+    });
+
+    it('leaves the other files in the public folder alone', () => {
+        fs.writeFileSync(`${publicPath}/index.html`, '<html></html>');
+        fs.writeFileSync(oldFile, 'old');
+
+        createGenerator();
+
+        expect(isStillThere(`${publicPath}/index.html`)).toBe(true);
+    });
+
+    it('does nothing when there is no old file', () => {
+        expect(createGenerator).not.toThrow();
     });
 });
